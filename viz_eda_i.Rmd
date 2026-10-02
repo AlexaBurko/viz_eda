@@ -20,6 +20,11 @@ Let's make a scatterplot!
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + 
   geom_point()
+
+# the first thing in the argument is the name of the dataset
+# x = the variable you want on the x axis
+# y = the variable you want on the y axis
+# this creates a scatter plot
 ```
 
 He likes the dataframe first.
@@ -30,15 +35,18 @@ ggp_temp_scatterplot =
   geom_point()
 
 ggp_temp_scatterplot
+
+# this does the same thing as the first chunk
 ```
 
 Let's make this a bit fancier...
 ```{r}
-#scatter separated by name
 weather_df |> 
   ggplot(aes(x = tmin, y = tmax, color = name)) +
   geom_point(alpha = .25) + #alpha makes points a bit transparent
   geom_smooth(se = FALSE) #adds a smooth line through the points; gives error bars by default so se=F gets rid of them 
+
+# "color = name" makes the data points that correspond to the different values of the variable "name" different colors, and creates a legend to show what values the colors correspond to 
 ```
 
 ```{r}
