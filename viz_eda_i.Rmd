@@ -1,0 +1,186 @@
+---
+title: "Visualization"
+output: github_document
+date: "2026-10-01"
+---
+
+```{r setup}
+library(tidyverse)
+library(ggridges)
+
+library(p8105.datasets)
+data("weather_df")
+```
+
+```{r}
+weather_df #365 days, 2 years, 3 weather stations
+```
+
+Let's make a scatterplot!
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+He likes the dataframe first.
+```{r}
+ggp_temp_scatterplot = 
+  weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+
+ggp_temp_scatterplot
+```
+
+Let's make this a bit fancier...
+```{r}
+#scatter separated by name
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .25) + #alpha makes points a bit transparent
+  geom_smooth(se = FALSE) #adds a smooth line through the points; gives error bars by default so se=F gets rid of them 
+```
+
+```{r}
+#only 1 smooth line
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point(aes(color = name), alpha = .25) + #alpha makes points a bit transparent; adding aes makes it so that colors are only defined for points and won't show up in geom_smooth
+  geom_smooth(se = FALSE) #adds a smooth line through the points; gives error bars by default so se=F gets rid of them 
+```
+the aesthetics are up to you
+
+```{r}
+#no points
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_smooth(se = FALSE) 
+```
+
+Show faceting
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.5) +
+  facet_grid(. ~ name) #nothing separating rows, name separates cols; switching to facet_grid(name ~ .) leads to graphs on top of each other
+```
+
+```{r}
+#does same thing as above, just a diff way to have column specification
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.5) +
+  facet_grid(cols = vars(name))
+```
+
+Let's look at something else.
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+Make a plot of Central Park tmax and tmin only, and convert temperatures o farenheit
+
+```{r}
+weather_df |> 
+  filter(name == "CentralPark_NY") |> 
+  mutate(
+    tmax = tmax * (9/5) + 32,
+    tmin = tmin * (9/5) + 32
+  ) |> 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+```
+
+what's a hex plot
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmin, y=tmax))+
+  geom_hex() #gives an idea of the data summary and what it looks like. more shading = more common
+```
+
+## Univariate plots
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax)) + 
+  geom_histogram()
+```
+
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax, fill=name)) + #color = boundary of bar instead of fill, so use fill instead
+  geom_histogram(position = "dodge") # dodge makes it so they don't overlap
+```
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax, fill=name)) + #color = boundary of bar instead of fill, so use fill instead
+  geom_histogram()+
+  facet_grid(. ~ name) # better than dodge
+```
+
+Density plots are great!!
+
+```{r}
+weather_df |> 
+  ggplot(aes(x=tmax, color=name)) +
+  geom_density()
+
+weather_df |> 
+  ggplot(aes(x=tmax, fill=name)) +
+  geom_density(alpha= .3)
+```
+Boxplots
+```{r}
+weather_df |> 
+  ggplot(aes(x = name, y = tmax)) + #adding x separates out the 3 boxplots by name
+  geom_boxplot()
+```
+
+Violin plots
+```{r}
+weather_df |> 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin() # shows distribution info (density plots on the side and mirrored); like a combined density and box plots
+```
+
+Ridge plots
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax, y = name)) + 
+  geom_density_ridges() #separates curves horizontally; helpful if you have a lot of categories
+```
+
+## Save some of the plots
+
+```{r}
+ggp_weather = 
+  weather_df |> 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.5) +
+  facet_grid(.~name)
+
+ggp_weather
+
+ggsave("images/ggp_weather.pdf", ggp_weather)
+```
+
+```{r fig.width = 12, fig.height = 12}
+weather_df |> 
+  ggplot(aes(x=tmin, y = tmax))+
+  geom_point()
+```
+
+to fix the size of the images, can use: 
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
