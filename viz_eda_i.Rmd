@@ -71,6 +71,8 @@ weather_df |>
   ggplot(aes(x = tmin, y = tmax, color = name)) +
   geom_point(alpha = 0.5) +
   facet_grid(. ~ name) #nothing separating rows, name separates cols; switching to facet_grid(name ~ .) leads to graphs on top of each other
+
+# the last line makes it so there are x amount of graphs for x number of different values of the variable "name". Each graph only contains the data points that correspond with that value of the variable "name"
 ```
 
 ```{r}
@@ -89,9 +91,13 @@ weather_df |>
   geom_point(aes(size = prcp), alpha = 0.5) +
   geom_smooth(se = FALSE) +
   facet_grid(. ~ name)
+
+# x is now the date instead of the minimum temp
+
+# this links the temperature datapoints with the corresponding precipitation data points
 ```
 
-Make a plot of Central Park tmax and tmin only, and convert temperatures o farenheit
+Make a plot of Central Park tmax and tmin only, and convert temperatures to farenheit
 
 ```{r}
 weather_df |> 
@@ -101,7 +107,8 @@ weather_df |>
     tmin = tmin * (9/5) + 32
   ) |> 
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_point()
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm", se = FALSE)
 ```
 
 what's a hex plot
