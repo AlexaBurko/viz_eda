@@ -1,0 +1,134 @@
+---
+title: "Numerical EDA"
+output: github_document
+date: "2026-10-08"
+---
+
+```{r setup}
+library(tidyverse)
+
+library(p8105.datasets)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = 0.6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+Load weather data
+```{r}
+data("weather_df")
+
+weather_df =
+  weather_df |> 
+  mutate(
+    month = lubridate::floor_date(date, unit = "month")
+  )
+
+# floor date rounds all date values down to the first of the month. Ex: august 5th becomes august 1st
+```
+
+```{r}
+weather_df |> 
+  filter(prcp>0) |> 
+  ggplot(aes(x=prcp))+
+  geom_histogram()
+```
+```{r}
+weather_df |> 
+  filter(tmax >= 20, tmax <= 30) |> 
+  ggplot(aes(x=tmax, y = tmin, color = name, shape = name))+
+  geom_point()
+
+```
+
+## 'group_by()'
+
+add some groups!
+```{r}
+weather_df |> 
+  group_by(name, month)
+```
+
+## summarize
+
+```{r}
+weather_df |> 
+  group_by(name, month) |> 
+  summarise(count = n())
+```
+
+```{r}
+weather_df |> 
+  count(name, month)
+```
+
+```{r}
+weather_df |> 
+  group_by(month) |> 
+  summarise(
+    count = n(),
+    n_days = n_distinct(date))
+```
+
+Dont do this
+```{r}
+weather_df |> 
+  pull(tmax) |> 
+  summary()
+```
+
+Do this instead
+```{r}
+weather_df |> 
+  group_by(name) |> 
+  summarise(
+    n = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmax = median(tmax, na.rm = TRUE),
+    sd_prcp = sd(prcp, na.rm = TRUE),
+    q25_prcp = quantile(prcp, 0.25, na.rm = TRUE),
+    q95_prcp = quantile(prcp, 0.95, na.rm = TRUE),
+  ) |> 
+  knitr::kable(digits=2)
+```
+
+```{r}
+weather_df |> 
+  group_by(name, month) |> 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) |> 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) |> 
+  knitr::kable(digits = 2)
+
+# na.rm = TRUE exludes missing data
+```
+
+what about looking at this
+```{r}
+weather_df |> 
+  group_by(name, month) |> 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) |> 
+  ggplot(aes(x = month, y = mean_tmax, color = name))+
+  geom_point()+
+  geom_line()
+```
+
