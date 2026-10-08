@@ -132,3 +132,109 @@ weather_df |>
   geom_line()
 ```
 
+```{r}
+weather_df |> 
+  group_by(name) |> 
+  mutate(center_tmax = tmax - mean(tmax, na.rm = TRUE)) |> 
+  ggplot(aes(x = date, y = center_tmax, color = name))+
+  geom_point()
+
+# centering variables.
+```
+
+What about "window" functions...
+
+Try to rank things
+
+```{r}
+weather_df |> 
+  group_by(name, month) |> 
+  mutate(temp_rank = min_rank(desc(tmax))) |> 
+  filter(temp_rank < 2)
+
+```
+
+Lead and lag
+```{r}
+weather_df |> 
+  group_by(name) |> 
+  mutate(
+    lagged_tmax = lag(tmax, 3),
+    lead_tmax = lead(tmax)
+  )
+
+# lag gives the previous row's value for the selected variable (tmax in this case)
+# the number you give after corresponds to how many rows back you want to go
+# lead does the opposite
+
+```
+
+```{r}
+weather_df |> 
+  group_by(name) |> 
+  mutate(
+    temp_change = tmax - lag(tmax)
+  ) |> 
+  summarize (
+    mean_temp_change = mean(temp_change, na.rm = TRUE),
+    sd_temp_change = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+## Revisit some examples
+
+import, clean, tidy, etc the pulse data, and compute mean and median BDI score at each visit
+```{r}
+pulse_df = 
+  haven::read_sas("data/public_pulse_data.sas7bdat") |> 
+  janitor::clean_names() |> 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    names_prefix = "bdi_score_",
+    values_to = "bdi_score"
+  ) |> 
+  select(id, visit, everything()) |> 
+  mutate(
+    visit = replace(visit, visit=="bl", "00m") # bl = baseline
+  )
+
+
+pulse_df |> 
+  group_by(visit) |> 
+  summarize(
+    mean_BDI = mean(bdi_score, na.rm = TRUE),
+    median_BDI = median(bdi_score, na.rm = TRUE)) |> 
+  knitr::kable(digits=2)
+```
+
+In the FAS data, compute mean outcome (ears only) across dose and day of treatment; show in a reader friendly table
+
+```{r}
+
+pups_df =
+  read_csv("data/FAS_pups.csv", skip = 3, na = c("", ".", "NA")) |> 
+  janitor::clean_names()
+
+litters_df =
+   read_csv("data/FAS_litters.csv", na = c("", ".", "NA")) |> 
+  janitor::clean_names() |> 
+  separate(group, into = c("dose", "day_of_tx"), 3)
+
+fas_df =
+  left_join(pups_df, litters_df, by = "litter_number") |> 
+  select(litter_number, dose, day_of_tx, everything()) |> 
+  drop_na(dose, day_of_tx)
+
+fas_df |> 
+  group_by(dose, day_of_tx) |> 
+  summarize(
+    mean_ears = mean(pd_ears, na.rm = TRUE)
+  ) |> 
+  pivot_wider(
+    names_from = day_of_tx,
+    values_from = mean_ears
+  )
+
+```
+
